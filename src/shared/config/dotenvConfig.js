@@ -48,10 +48,13 @@ function validateConfig() {
   }
 
   if (errors.length > 0) {
-    console.error('\n❌ Production configuration failed:\n');
-    errors.forEach((msg) => console.error(`   • ${msg}`));
-    console.error('\nCopy backend/.env.example to backend/.env and fill in real values.\n');
-    process.exit(1);
+    const message = [
+      'Production configuration failed:',
+      ...errors.map((msg) => `  - ${msg}`),
+      'Fix backend/.env on the server, then: pm2 restart cafe-pos-backend',
+    ].join('\n');
+    console.error(message);
+    throw new Error(message);
   }
 }
 
