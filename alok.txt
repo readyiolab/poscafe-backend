@@ -1,0 +1,119 @@
+# Production Deployment & Migration Guide
+
+This guide details the steps required to deploy the Cafe POS application to production on **`pos.sownmark.com`**. It covers database migrations, safe admin creation, environment configurations, and security practices.
+
+---
+
+## 1. Environment Variable Setup (`.env`)
+
+Before running the application in production, you must set up the `.env` file in the `backend/` directory.
+
+> [!CAUTION]
+> Never commit your production `.env` file to version control (Git). Keep these secrets safe.
+
+### Backend `.env` Template
+Create a `.env` file inside the `backend` folder:
+```env
+PORT=7000
+DB_HOST=your-production-db-host
+DB_USER=your-db-username
+DB_PASS=your-secure-db-password
+DB_NAME=cafe_pos
+
+# JWT SECURITY: Generate a strong secret key
+JWT_SECRET=your-random-64-character-jwt-secret
+JWT_EXPIRES_IN=1d
+
+# CORS SECURITY: Crucial to restrict requests to your domain
+FRONTEND_URL=https://pos.sownmark.com
+
+# Media storage details
+CLOUDINARY_CLOUD_NAME=dsrl2cycd
+CLOUDINARY_API_KEY=115111999398215
+CLOUDINARY_API_SECRET=your-cloudinary-secret
+```
+
+> [!TIP]
+> You can generate a cryptographically secure 64-byte secret key for `JWT_SECRET` by running the following command on your server:
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+> ```
+
+---
+
+## 2. Database Setup & Automated Migrations
+
+We have implemented an **Automated Migration Runner** that manages all database structures in a single command. 
+
+To run migrations:
+```bash
+cd backend
+npm run migrate
+```
+
+### How It Works:
+1. **Initial Schema**: If the database is completely empty, it automatically imports and executes the base [schema.sql](file:///d:/Alok%20Softwars/cafe%20pos/cafe%20pos/backend/src/shared/database/schema.sql) tables.
+2. **Migrations Checklist**: It checks a local log table (`tbl_migrations_run`) to see which patches have already been run.
+3. **Applies Patch Scripts**: It runs any pending migrations (e.g. adding image columns, QR tokens, petty cash, and customer details) sequentially using isolated child processes.
+4. **Data Safety**: If a migration script has already run, it skips it. This prevents duplicate column errors and makes migrations safe to run repeatedly.
+
+---
+
+## 3. Safe Admin Account Creation (Anti-Data-Loss)
+
+> [!WARNING]
+> Do **NOT** run `npm run seed` or `node src/shared/database/seed.js` in production! 
+> The seeding script drops all existing tables and re-seeds dummy menu data. Running it will instantly delete all production transaction logs, stock, and orders.
+
+To safely register the first admin user in your clean production database without losing any data, run the new `create-admin` utility script:
+```bash
+cd backend
+npm run create-admin <email> <password>
+```
+*Example:*
+```bash
+npm run create-admin admin@sownmark.com MySecureAdminPassword123
+```
+This script checks if the email already exists, hashes the password using `bcrypt`, and inserts the user into `tbl_users` with the role `admin`, leaving all other tables completely untouched.
+
+---
+
+## 4. Production Security Controls
+
+The application is reinforced with the following production security controls:
+- **Strict CORS Mapping**: Cross-Origin Resource Sharing is restricted specifically to your `FRONTEND_URL` (configured in app.js). No other domains can call your API.
+- **Helmet Headers**: Standard security headers (XSS filters, Clickjacking prevention, Content-Security-Policy rules) are applied globally via `helmet()`.
+- **SQL Injection Prevention**: Multiple SQL statement batches are disabled in the pool connection configuration (`multipleStatements: false`).
+- **Auth Rate Limiting**: The `/api/auth/login` route is protected by `authLimiter`, allowing a maximum of **10 login attempts per hour per IP** to prevent brute-force credential stuffing.
+- **API Request Rate Limiting**: Protects against Denial of Service (DoS) by limiting IPs to 100 requests per 15 minutes.
+
+---
+
+## 5. Build and Process Management
+
+### Frontend Compilation
+Vite compiles environment variables statically at build time. When building the frontend distribution bundle, you **must** supply the production API domain:
+
+```bash
+cd frontend
+VITE_API_URL=https://pos.sownmark.com/api npm run build
+```
+This creates a compiled production package in `frontend/dist/` which can be served by Nginx or uploaded to a static hosting provider (e.g., Vercel, Netlify, Hostinger).
+
+### Backend Daemon Server (PM2)
+To keep the node server running in the background and ensure it automatically restarts if the server reboots, use **PM2**:
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Run migrations first
+npm run migrate
+
+# Start the server under PM2 management
+pm2 start server.js --name "cafe-pos-backend"
+
+# Ensure PM2 restarts on system boot
+pm2 startup
+pm2 save
+```
