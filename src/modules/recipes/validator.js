@@ -6,6 +6,11 @@ const recipeSchema = Joi.object({
   quantity_used: Joi.number().positive().required()
 });
 
+const updateRecipeSchema = Joi.object({
+  quantity_used: Joi.number().positive().required()
+});
+
 module.exports = {
-  recipeSchema
+  recipeSchema,
+  updateRecipeSchema
 };

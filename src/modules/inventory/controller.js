@@ -79,6 +79,15 @@ class InventoryController {
       next(err);
     }
   }
+
+  async deleteInventoryItem(req, res, next) {
+    try {
+      await inventoryService.deleteInventoryItem(req.params.id);
+      return successResponse(res, null, 'Inventory item deleted successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new InventoryController();

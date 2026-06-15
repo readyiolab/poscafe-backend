@@ -14,6 +14,11 @@ class RecipesService {
     await recipesRepo.deleteRecipe(id);
     return { id };
   }
+
+  async updateRecipe(id, data) {
+    await recipesRepo.updateRecipe(id, data);
+    return { id, ...data };
+  }
 }
 
 module.exports = new RecipesService();

@@ -28,6 +28,10 @@ class InventoryRepository {
     return db.update('tbl_inventory', data, 'id = ?', [id]);
   }
 
+  async deleteInventory(id) {
+    return db.delete('tbl_inventory', 'id = ?', [id]);
+  }
+
   async updateStock(id, stockToAdd) {
     const sql = `UPDATE tbl_inventory SET current_stock = current_stock + ? WHERE id = ?`;
     await db.query(sql, [stockToAdd, id]);

@@ -76,6 +76,18 @@ class InventoryService {
     const sql = `SELECT * FROM tbl_inventory WHERE current_stock < 10 ORDER BY current_stock ASC`;
     return db.queryAll(sql);
   }
+
+  async deleteInventoryItem(id) {
+    const item = await inventoryRepo.findInventoryById(id);
+    if (!item) {
+      const err = new Error('Inventory item not found');
+      err.statusCode = 404;
+      throw err;
+    }
+    await inventoryRepo.deleteInventory(id);
+    appEvents.emit('inventory_updated');
+    return { id };
+  }
 }
 
 module.exports = new InventoryService();

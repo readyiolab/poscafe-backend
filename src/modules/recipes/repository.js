@@ -18,6 +18,10 @@ class RecipesRepository {
   async deleteRecipe(id) {
     return db.delete('tbl_recipes', 'id = ?', [id]);
   }
+
+  async updateRecipe(id, data) {
+    return db.update('tbl_recipes', data, 'id = ?', [id]);
+  }
 }
 
 module.exports = new RecipesRepository();

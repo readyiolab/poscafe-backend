@@ -1,6 +1,6 @@
 const recipesService = require('./service');
 const { successResponse } = require('../../shared/utils/response');
-const { recipeSchema } = require('./validator');
+const { recipeSchema, updateRecipeSchema } = require('./validator');
 
 class RecipesController {
   async getRecipesByMenuItem(req, res, next) {
@@ -29,6 +29,18 @@ class RecipesController {
     try {
       await recipesService.deleteRecipe(req.params.id);
       return successResponse(res, null, 'Recipe deleted successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateRecipe(req, res, next) {
+    try {
+      const { error, value } = updateRecipeSchema.validate(req.body, { abortEarly: false });
+      if (error) throw error;
+
+      const result = await recipesService.updateRecipe(req.params.id, value);
+      return successResponse(res, result, 'Recipe updated successfully');
     } catch (err) {
       next(err);
     }

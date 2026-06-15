@@ -44,22 +44,28 @@ app.use(express.json());
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+/** Mount at /api/... and /... so login works if nginx strips the /api prefix on proxy_pass */
+function useApi(mountPath, router) {
+  app.use(`/api${mountPath}`, router);
+  app.use(mountPath, router);
+}
+
 // Routes Registration
-app.use('/api/auth', authRoutes);
-app.use('/api/tables', tablesRoutes);
-app.use('/api/categories', categoriesRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/recipes', recipesRoutes);
-app.use('/api/orders', ordersRoutes);
-app.use('/api/billing', billingRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/transactions', transactionsRoutes);
-app.use('/api/offers', offersRoutes);
-app.use('/api/petty-cash', pettyCashRoutes);
-app.use('/api/customers', customersRoutes);
+useApi('/auth', authRoutes);
+useApi('/tables', tablesRoutes);
+useApi('/categories', categoriesRoutes);
+useApi('/menu', menuRoutes);
+useApi('/inventory', inventoryRoutes);
+useApi('/recipes', recipesRoutes);
+useApi('/orders', ordersRoutes);
+useApi('/billing', billingRoutes);
+useApi('/users', usersRoutes);
+useApi('/dashboard', dashboardRoutes);
+useApi('/analytics', analyticsRoutes);
+useApi('/transactions', transactionsRoutes);
+useApi('/offers', offersRoutes);
+useApi('/petty-cash', pettyCashRoutes);
+useApi('/customers', customersRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
