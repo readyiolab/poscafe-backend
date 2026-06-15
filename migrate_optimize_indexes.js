@@ -1,4 +1,5 @@
 const db = require('./src/shared/config/database');
+const { isDuplicateKeyError } = require('./src/shared/utils/migrationHelpers');
 
 async function migrate() {
     try {
@@ -9,7 +10,11 @@ async function migrate() {
             await db.query('CREATE INDEX idx_orders_status ON tbl_orders(status)');
             console.log('✅ Index idx_orders_status created on tbl_orders.');
         } catch (err) {
-            console.log('ℹ️ Index idx_orders_status already exists or could not be created.');
+            if (isDuplicateKeyError(err)) {
+                console.log('ℹ️ Index already exists. Skipping.');
+            } else {
+                console.log('ℹ️ Index idx_orders_status could not be created:', err.message);
+            }
         }
 
         // 2. Add index on tbl_transactions(status) if not exists
@@ -17,7 +22,11 @@ async function migrate() {
             await db.query('CREATE INDEX idx_transactions_status ON tbl_transactions(status)');
             console.log('✅ Index idx_transactions_status created on tbl_transactions.');
         } catch (err) {
-            console.log('ℹ️ Index idx_transactions_status already exists or could not be created.');
+            if (isDuplicateKeyError(err)) {
+                console.log('ℹ️ Index idx_transactions_status already exists. Skipping.');
+            } else {
+                console.log('ℹ️ Index idx_transactions_status could not be created:', err.message);
+            }
         }
 
         // 3. Add index on tbl_menu_items(status) if not exists
@@ -25,7 +34,11 @@ async function migrate() {
             await db.query('CREATE INDEX idx_menu_items_status ON tbl_menu_items(status)');
             console.log('✅ Index idx_menu_items_status created on tbl_menu_items.');
         } catch (err) {
-            console.log('ℹ️ Index idx_menu_items_status already exists or could not be created.');
+            if (isDuplicateKeyError(err)) {
+                console.log('ℹ️ Index idx_menu_items_status already exists. Skipping.');
+            } else {
+                console.log('ℹ️ Index idx_menu_items_status could not be created:', err.message);
+            }
         }
 
         console.log('🎉 Index optimization migration completed!');

@@ -2,21 +2,22 @@ const db = require('./src/shared/config/database');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const { frontendUrl } = require('./src/shared/config/dotenvConfig');
+const { addColumnIfNotExists, isDuplicateColumnError } = require('./src/shared/utils/migrationHelpers');
 
 async function migrate() {
     try {
         console.log('🚀 Running migration: Adding qr_token to tbl_tables...');
         
-        // 1. Add qr_token column if it doesn't exist
         try {
-            await db.query('ALTER TABLE tbl_tables ADD COLUMN qr_token VARCHAR(64) UNIQUE AFTER qr_code_url');
-            console.log('✅ Column qr_token added successfully.');
+            await addColumnIfNotExists(
+                db,
+                'tbl_tables',
+                'qr_token',
+                'qr_token VARCHAR(64) UNIQUE AFTER qr_code_url'
+            );
         } catch (err) {
-            if (err.code === 'ER_DUP_COLUMN_NAME') {
-                console.log('ℹ️ Column qr_token already exists. Continuing to update tokens...');
-            } else {
-                throw err;
-            }
+            if (!isDuplicateColumnError(err)) throw err;
+            console.log('ℹ️ Column qr_token already exists. Continuing...');
         }
 
         // 2. Fetch all tables to update them with tokens
