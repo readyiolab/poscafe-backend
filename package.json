@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
-    "start-prod": "node server.js",
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "start:prod": "node server.js",
     "migrate": "node run_migrations.js",
     "create-admin": "node create_admin.js",
     "seed": "node src/shared/database/seed.js",

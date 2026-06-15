@@ -2,8 +2,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./src/app');
 const setupSockets = require('./src/sockets');
-const { port, frontendUrl } = require('./src/shared/config/dotenvConfig');
+const { port, frontendUrl, isProduction, validateConfig } = require('./src/shared/config/dotenvConfig');
 const db = require('./src/shared/config/database');
+
+validateConfig();
 
 const server = http.createServer(app);
 
@@ -17,7 +19,7 @@ const io = new Server(server, {
 setupSockets(io);
 
 server.listen(port, () => {
-  console.log(`🚀 Cafe POS Backend running on http://localhost:${port}`);
+  console.log(`🚀 Cafe POS Backend running on port ${port} (${isProduction ? 'production' : 'development'})`);
 });
 
 async function shutdown(signal) {

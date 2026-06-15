@@ -21,17 +21,25 @@ const offersRoutes = require('./modules/offers/routes');
 const pettyCashRoutes = require('./modules/petty_cash/routes');
 const customersRoutes = require('./modules/customers/routes');
 
-const { frontendUrl } = require('./shared/config/dotenvConfig');
+const { frontendUrl, isProduction } = require('./shared/config/dotenvConfig');
 
 const app = express();
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: frontendUrl || '*',
+  origin: frontendUrl,
   credentials: true,
 }));
-app.use(morgan('dev'));
+if (!isProduction) {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
 app.use(express.json());
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

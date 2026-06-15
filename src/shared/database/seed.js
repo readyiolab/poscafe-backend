@@ -44,22 +44,26 @@ async function seed() {
     }
     console.log('✅ Schema migrated successfully with "tbl_" prefix.');
 
-    // 3. Seed Default Admin
-    const adminUsername = 'psurya162@gmail.com';
-    const adminPassword = 'Alok@123';
-    
-    const existingAdmin = await db.select('tbl_users', '*', 'username = ?', [adminUsername]);
-    
-    if (!existingAdmin) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(adminPassword, salt);
-      
-      await db.insert('tbl_users', {
-        username: adminUsername,
-        password_hash: passwordHash,
-        role: 'admin'
-      });
-      console.log(`✅ Default Admin created: ${adminUsername}`);
+    // 3. Seed Default Admin (development only — use create_admin.js in production)
+    const adminUsername = process.env.SEED_ADMIN_USERNAME;
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+
+    if (!adminUsername || !adminPassword) {
+      console.log('ℹ️  Skipping admin seed. Set SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD in .env to create a dev admin.');
+    } else {
+      const existingAdmin = await db.select('tbl_users', '*', 'username = ?', [adminUsername]);
+
+      if (!existingAdmin) {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+        await db.insert('tbl_users', {
+          username: adminUsername,
+          password_hash: passwordHash,
+          role: 'admin',
+        });
+        console.log(`✅ Default Admin created: ${adminUsername}`);
+      }
     }
 
     // 4. Seed Initial Categories
