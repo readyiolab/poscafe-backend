@@ -25,6 +25,9 @@ class MenuController {
       if (req.file) {
         value.image_url = req.file.path;
       }
+      if (value.calories === '' || value.calories == null) {
+        delete value.calories;
+      }
 
       const result = await menuService.createMenuItem(value);
       return successResponse(res, result, 'Menu item created successfully', 201);
@@ -40,6 +43,9 @@ class MenuController {
 
       if (req.file) {
         value.image_url = req.file.path;
+      }
+      if (value.calories === '' || value.calories == null) {
+        delete value.calories;
       }
 
       const result = await menuService.updateMenuItem(req.params.id, value);

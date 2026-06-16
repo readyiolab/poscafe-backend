@@ -245,10 +245,17 @@ class OrdersService {
       const priced = await this._priceItemsWithOffers(data.items, menuById);
       const totalAmount = priced.totalAmount;
 
+      let customerId = null;
+      if (data.customer_phone) {
+        const loyaltyService = require('../loyalty/service');
+        const customer = await loyaltyService.getOrCreateCustomerByPhone(data.customer_phone);
+        customerId = customer?.id || null;
+      }
+
       // 3. Insert Order
       const [orderResult] = await connection.execute(
-        'INSERT INTO tbl_orders (table_id, total_amount, status) VALUES (?, ?, ?)',
-        [tableId, totalAmount, 'Pending']
+        'INSERT INTO tbl_orders (table_id, total_amount, status, customer_id) VALUES (?, ?, ?, ?)',
+        [tableId, totalAmount, 'Pending', customerId]
       );
       const orderId = orderResult.insertId;
 
@@ -321,12 +328,15 @@ class OrdersService {
     const order = await this.createOrder({
       table_id: data.table_id,
       items: data.items,
+      customer_phone: data.customer_phone || null,
     });
 
     const billingService = require('../billing/service');
     const payment = await billingService.payBill({
       table_id: data.table_id,
       payment_method: data.payment_method,
+      customer_phone: data.customer_phone || null,
+      coupon_code: data.coupon_code || null,
     });
 
     return {

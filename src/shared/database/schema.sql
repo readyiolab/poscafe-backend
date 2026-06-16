@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS tbl_menu_items (
   description TEXT,
   price DECIMAL(10, 2) NOT NULL,
   status ENUM('active', 'inactive', 'sold_out', 'available') NOT NULL DEFAULT 'available',
+  calories INT UNSIGNED NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (category_id) REFERENCES tbl_categories(id) ON DELETE CASCADE
@@ -63,6 +64,9 @@ CREATE TABLE IF NOT EXISTS tbl_orders (
   table_id INT NOT NULL,
   status ENUM('Pending', 'Preparing', 'Ready', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Pending',
   total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+  preparing_at TIMESTAMP NULL DEFAULT NULL,
+  ready_at TIMESTAMP NULL DEFAULT NULL,
+  completed_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (table_id) REFERENCES tbl_tables(id)
@@ -104,4 +108,20 @@ CREATE TABLE IF NOT EXISTS tbl_inventory_logs (
   type ENUM('refill', 'deduction', 'adjustment') NOT NULL DEFAULT 'refill',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (inventory_id) REFERENCES tbl_inventory(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS tbl_table_billing_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  table_id INT NOT NULL,
+  bill_requested_at TIMESTAMP NULL DEFAULT NULL,
+  payment_preference ENUM('cash','upi') NULL DEFAULT NULL,
+  bill_visible_to_customer TINYINT(1) NOT NULL DEFAULT 0,
+  bill_snapshot JSON NULL,
+  shown_at TIMESTAMP NULL DEFAULT NULL,
+  shown_by_user_id INT NULL DEFAULT NULL,
+  status ENUM('active','closed') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (table_id) REFERENCES tbl_tables(id) ON DELETE CASCADE,
+  INDEX idx_table_billing_active (table_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

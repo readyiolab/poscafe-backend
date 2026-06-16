@@ -7,6 +7,7 @@ const orderItemSchema = Joi.object({
 
 const createOrderSchema = Joi.object({
   table_token: Joi.string().hex().length(32).required(),
+  customer_phone: Joi.string().pattern(/^\d{10,15}$/).optional(),
   items: Joi.array().items(orderItemSchema).min(1).required()
 });
 
@@ -20,6 +21,7 @@ const posCheckoutSchema = Joi.object({
   payment_method: Joi.string().valid('cash', 'card', 'upi', 'card/upi').required(),
   customer_name: Joi.string().allow('', null).optional(),
   customer_phone: Joi.string().allow('', null).optional(),
+  coupon_code: Joi.string().allow('', null).optional(),
 });
 
 module.exports = {

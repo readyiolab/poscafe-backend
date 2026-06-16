@@ -6,7 +6,8 @@ const menuSchema = Joi.object({
   description: Joi.string().allow('', null),
   price: Joi.number().positive().required(),
   image_url: Joi.string().allow('', null),
-  status: Joi.string().valid('active', 'inactive', 'sold_out', 'available').default('available')
+  status: Joi.string().valid('active', 'inactive', 'sold_out', 'available').default('available'),
+  calories: Joi.alternatives().try(Joi.number().integer().min(0), Joi.valid('', null)).optional(),
 });
 
 module.exports = {

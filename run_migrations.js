@@ -13,7 +13,11 @@ const MIGRATIONS = [
   'migrate_offers.js',
   'migrate_combos.js',
   'migrate_customers_table.js',
-  'migrate_optimize_indexes.js'
+  'migrate_optimize_indexes.js',
+  'migrate_loyalty_system.js',
+  'migrate_table_billing_session.js',
+  'migrate_order_status_timestamps.js',
+  'migrate_menu_calories.js'
 ];
 
 async function runForkedScript(scriptName) {

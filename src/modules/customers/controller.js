@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const customersService = require('./service');
+const loyaltyService = require('../loyalty/service');
 const { successResponse } = require('../../shared/utils/response');
 
 const savePhoneSchema = Joi.object({
@@ -16,6 +17,19 @@ class CustomersController {
 
       const result = await customersService.saveCustomerPhone(value.phone);
       return successResponse(res, result, 'Phone saved successfully', 201);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getProfile(req, res, next) {
+    try {
+      const phone = req.query.phone;
+      if (!phone || !/^\d{10,15}$/.test(phone)) {
+        throw { statusCode: 400, message: 'Valid phone query parameter is required' };
+      }
+      const data = await loyaltyService.getProfile(phone);
+      return successResponse(res, data);
     } catch (err) {
       next(err);
     }

@@ -4,10 +4,17 @@ function setupSockets(io) {
   io.on('connection', (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
-    // Join specialized rooms if needed (e.g., 'kitchen')
     socket.on('join_kitchen', () => {
       socket.join('kitchen');
       console.log(`Client ${socket.id} joined kitchen room`);
+    });
+
+    socket.on('join_table', (tableId) => {
+      if (tableId != null) {
+        const room = `table_${tableId}`;
+        socket.join(room);
+        console.log(`Client ${socket.id} joined ${room}`);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -15,17 +22,13 @@ function setupSockets(io) {
     });
   });
 
-  // Listen to application events and broadcast to sockets
   appEvents.on('new_order', (order) => {
-    // Alert kitchen staff
     io.to('kitchen').emit('new_order', order);
-    // Also notify all connected clients for general status updates if needed
     io.emit('order_placed', { order_id: order.id, table_id: order.table_id });
     console.log(`Socket: Broadcasted new_order ${order.id} to kitchen`);
   });
 
   appEvents.on('order_status_updated', (order) => {
-    // Notify everyone (including table customer if they are listening)
     io.emit('order_status_updated', order);
     console.log(`Socket: Broadcasted order_status_updated for order ${order.id}`);
   });
@@ -48,6 +51,34 @@ function setupSockets(io) {
   appEvents.on('inventory_updated', () => {
     io.emit('inventory_updated');
     console.log('Socket: Broadcasted inventory_updated');
+  });
+
+  appEvents.on('service_request', (data) => {
+    io.emit('service_request', data);
+    console.log(`Socket: Broadcasted service_request for table ${data.table_number}`);
+  });
+
+  appEvents.on('service_request_resolved', (data) => {
+    io.emit('service_request_resolved', data);
+  });
+
+  appEvents.on('customer_points_updated', (data) => {
+    io.emit('customer_points_updated', data);
+  });
+
+  appEvents.on('bill_request_updated', (data) => {
+    io.to(`table_${data.table_id}`).emit('bill_request_updated', data);
+    io.emit('bill_request_updated', data);
+  });
+
+  appEvents.on('customer_bill_shown', (data) => {
+    io.to(`table_${data.table_id}`).emit('customer_bill_shown', data);
+    io.emit('customer_bill_shown', data);
+  });
+
+  appEvents.on('customer_bill_closed', (data) => {
+    io.to(`table_${data.table_id}`).emit('customer_bill_closed', data);
+    io.emit('customer_bill_closed', data);
   });
 }
 

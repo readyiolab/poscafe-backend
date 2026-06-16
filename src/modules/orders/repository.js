@@ -46,7 +46,11 @@ class OrdersRepository {
   }
 
   async updateOrderStatus(id, status) {
-    return db.update('tbl_orders', { status }, 'id = ?', [id]);
+    const updates = { status };
+    if (status === 'Preparing') updates.preparing_at = new Date();
+    if (status === 'Ready') updates.ready_at = new Date();
+    if (status === 'Completed') updates.completed_at = new Date();
+    return db.update('tbl_orders', updates, 'id = ?', [id]);
   }
 }
 

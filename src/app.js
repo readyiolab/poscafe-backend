@@ -20,6 +20,7 @@ const transactionsRoutes = require('./modules/transactions/routes');
 const offersRoutes = require('./modules/offers/routes');
 const pettyCashRoutes = require('./modules/petty_cash/routes');
 const customersRoutes = require('./modules/customers/routes');
+const loyaltyRoutes = require('./modules/loyalty/routes');
 
 const { frontendUrl, isProduction } = require('./shared/config/dotenvConfig');
 
@@ -66,6 +67,7 @@ useApi('/transactions', transactionsRoutes);
 useApi('/offers', offersRoutes);
 useApi('/petty-cash', pettyCashRoutes);
 useApi('/customers', customersRoutes);
+useApi('/loyalty', loyaltyRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
