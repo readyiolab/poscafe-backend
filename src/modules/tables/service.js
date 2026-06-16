@@ -55,15 +55,27 @@ class TablesService {
     const table = await tablesRepo.findTableById(id);
     if (!table) throw { statusCode: 404, message: 'Table not found' };
 
+    const tableNumber = String(data.table_number || '').trim();
+    if (!tableNumber) {
+      throw { statusCode: 400, message: 'Table number is required' };
+    }
+
+    if (tableNumber !== String(table.table_number)) {
+      const existing = await tablesRepo.findTableByNumber(tableNumber);
+      if (existing && Number(existing.id) !== Number(id)) {
+        throw { statusCode: 409, message: `Table "${tableNumber}" already exists. Choose another number.` };
+      }
+    }
+
     await tablesRepo.updateTable(id, {
-      table_number: data.table_number,
-      capacity: data.capacity
+      table_number: tableNumber,
+      capacity: data.capacity,
     });
 
     const appEvents = require('../../shared/utils/events');
-    appEvents.emit('table_status_updated', { table_id: id });
+    appEvents.emit('table_status_updated', { table_id: id, table_number: tableNumber });
 
-    return { id, table_number: data.table_number, capacity: data.capacity };
+    return { id: Number(id), table_number: tableNumber, capacity: data.capacity };
   }
 
   async deleteTable(id) {
